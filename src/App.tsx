@@ -13,6 +13,7 @@ import Analysis from "./pages/Analysis";
 import Behavior from "./pages/Behavior";
 import Health from "./pages/Health";
 import Chatbot from "./pages/Chatbot";
+import ApiDocs from "./pages/ApiDocs";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="/behavior" element={<Behavior />} />
               <Route path="/health" element={<Health />} />
               <Route path="/chatbot" element={<Chatbot />} />
+              <Route path="/api-docs" element={<ApiDocs />} />
             </Route>
             <Route path="/about" element={<About />} />
             <Route path="*" element={<NotFound />} />
