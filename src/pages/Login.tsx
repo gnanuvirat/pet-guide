@@ -4,18 +4,47 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Mail, Lock } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { supabase } from '@/lib/supabase';
+import { toast } from '@/components/ui/sonner';
 
 const Login = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  const handleGoogleLogin = () => {
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
-    // This would be where you integrate with Google Auth
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+      
+      toast.success('Logged in successfully');
       navigate('/upload');
-    }, 1500);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
+      
+      if (error) throw error;
+    } catch (error: any) {
+      toast.error(error.message);
+      setIsLoading(false);
+    }
   };
 
   const handleGuestLogin = () => {
@@ -77,36 +106,45 @@ const Login = () => {
               <hr className="w-full border-gray-300" />
             </div>
 
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail className="h-5 w-5 text-gray-400" />
-              </div>
-              <Input
-                type="email"
-                placeholder="Email address"
-                className="pl-10"
-              />
-            </div>
+            <form onSubmit={handleEmailLogin}>
+              <div className="space-y-4">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Mail className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <Input
+                    type="email"
+                    placeholder="Email address"
+                    className="pl-10"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
 
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock className="h-5 w-5 text-gray-400" />
-              </div>
-              <Input
-                type="password"
-                placeholder="Password"
-                className="pl-10"
-              />
-            </div>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    className="pl-10"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
 
-            <div>
-              <Button
-                className="w-full pet-btn-primary"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Loading...' : 'Sign in'}
-              </Button>
-            </div>
+                <Button
+                  type="submit"
+                  className="w-full pet-btn-primary"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Loading...' : 'Sign in'}
+                </Button>
+              </div>
+            </form>
 
             <div className="text-center">
               <button
