@@ -1,17 +1,26 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Mail, Lock } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/components/ui/sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  // Redirect authenticated users away from login page
+  useEffect(() => {
+    if (user) {
+      navigate('/upload');
+    }
+  }, [user, navigate]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +34,7 @@ const Login = () => {
       if (error) throw error;
       
       toast.success('Logged in successfully');
-      navigate('/upload');
+      // The navigation will happen in the useEffect when user state updates
     } catch (error: any) {
       toast.error(error.message);
     } finally {
