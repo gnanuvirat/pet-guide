@@ -1,23 +1,41 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Menu, X, Home, Upload, MessageSquare, Heart, Info } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Menu, X, Home, Upload, MessageSquare, Heart, Info, LogOut } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/sonner';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      toast.success('Logged out successfully');
+      navigate('/');
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
   const navLinks = [
     { name: 'Home', path: '/', icon: <Home className="h-5 w-5 mr-1" /> },
-    { name: 'Upload', path: '/upload', icon: <Upload className="h-5 w-5 mr-1" /> },
-    { name: 'Chatbot', path: '/chatbot', icon: <MessageSquare className="h-5 w-5 mr-1" /> },
-    { name: 'Vet Help', path: '/health', icon: <Heart className="h-5 w-5 mr-1" /> },
+    { name: 'Upload', path: '/upload', icon: <Upload className="h-5 w-5 mr-1" />, protected: true },
+    { name: 'Chatbot', path: '/chatbot', icon: <MessageSquare className="h-5 w-5 mr-1" />, protected: true },
+    { name: 'Vet Help', path: '/health', icon: <Heart className="h-5 w-5 mr-1" />, protected: true },
     { name: 'About Us', path: '/about', icon: <Info className="h-5 w-5 mr-1" /> },
   ];
+
+  const filteredNavLinks = navLinks.filter(link => !link.protected || (link.protected && user));
 
   return (
     <nav className="bg-white shadow-sm py-4 px-6 sticky top-0 z-50">
@@ -35,7 +53,7 @@ const Navbar = () => {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center space-x-4">
-          {navLinks.map((link) => (
+          {filteredNavLinks.map((link) => (
             <Link 
               key={link.name} 
               to={link.path} 
@@ -45,11 +63,18 @@ const Navbar = () => {
               {link.name}
             </Link>
           ))}
-          <Link to="/login">
-            <Button variant="outline" className="ml-4">
-              Login
+          {user ? (
+            <Button variant="outline" onClick={handleLogout} className="ml-4">
+              <LogOut className="h-5 w-5 mr-1" />
+              Logout
             </Button>
-          </Link>
+          ) : (
+            <Link to="/auth">
+              <Button variant="outline" className="ml-4">
+                Login
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -69,7 +94,7 @@ const Navbar = () => {
       {isMenuOpen && (
         <div className="md:hidden bg-white pt-4 pb-6 px-6 animate-fade-in-up">
           <div className="flex flex-col space-y-4">
-            {navLinks.map((link) => (
+            {filteredNavLinks.map((link) => (
               <Link 
                 key={link.name} 
                 to={link.path} 
@@ -80,11 +105,18 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
-            <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-              <Button variant="outline" className="w-full mt-2">
-                Login
+            {user ? (
+              <Button variant="outline" onClick={handleLogout} className="w-full">
+                <LogOut className="h-5 w-5 mr-1" />
+                Logout
               </Button>
-            </Link>
+            ) : (
+              <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                <Button variant="outline" className="w-full">
+                  Login
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       )}
